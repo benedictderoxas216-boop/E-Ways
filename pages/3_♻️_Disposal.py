@@ -1,8 +1,7 @@
 # pages/3_♻️_Disposal.py
 import streamlit as st
 
-st.set_page_config(page_title="Disposal", page_icon="♻️", layout="wide")
-st.title("♻️ Should I Repair, Sell, or Recycle?")
+st.title("Reduce")
 st.write("Answer a few questions about your device to get a recommendation.")
 
 powers_on = st.radio("Does the device power on?", ["Yes", "No"], horizontal=True)

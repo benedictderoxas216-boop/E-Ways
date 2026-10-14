@@ -11,8 +11,7 @@ from sheets_db import (
     update_status,
 )
 
-st.set_page_config(page_title="Community Board", page_icon="🛒", layout="wide")
-st.title("🛒 Community Board")
+st.title("Reuse")
 st.write("Buy or sell old electronics with other students.")
 
 STATUS_BADGES = {

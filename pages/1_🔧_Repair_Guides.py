@@ -2,8 +2,7 @@
 import streamlit as st
 from guides_data import DEVICES
 
-st.set_page_config(page_title="Repair Guides", page_icon="🔧", layout="wide")
-st.title("🔧 Repair Guides")
+st.title("Repair")
 
 search_query = st.text_input(
     "Search for a device",
