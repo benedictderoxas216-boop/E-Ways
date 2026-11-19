@@ -23,17 +23,19 @@ def home():
     col3.write("Find out whether a device should be repaired, resold, or recycled.")
 
 
-
+# Define each page once so we can use it for both navigation and links
 home_page = st.Page(home, title="Home", icon="🏠", default=True)
 repair_page = st.Page("pages/1_🔧_Repair_Guides.py", title="Repair", icon="🔧")
 reuse_page = st.Page("pages/2_🛒_Community_Board.py", title="Reuse", icon="🛒")
 reduce_page = st.Page("pages/3_♻️_Disposal.py", title="Reduce", icon="♻️")
 
+# Hide the default links so we control where they appear
 pg = st.navigation(
-    [home_page, repair_page, reuse_page, reduce_page],
+    [home_page, repair_page, reuse_page, reduce_page,],
     position="hidden",
 )
 
+# Sidebar content, in the order it should appear
 st.sidebar.title("E-ways")
 st.sidebar.page_link(home_page, label="Home", icon="🏠")
 st.sidebar.page_link(repair_page, label="Repair", icon="🔧")

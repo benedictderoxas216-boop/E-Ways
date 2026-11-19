@@ -7,6 +7,7 @@ import gspread
 import pandas as pd
 import streamlit as st
 from google.oauth2.service_account import Credentials
+from device_types import DEVICE_TYPES
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -23,6 +24,7 @@ COLUMNS = [
     "description",
     "status",
     "code_hash",
+    "device_type",
 ]
 
 STATUS_AVAILABLE = "Available"
@@ -94,9 +96,21 @@ def load_listings():
 
 
 def save_listing(new_listing):
-    """Add one listing as a new row at the bottom of the sheet."""
+    """Add one listing as a new row, placing each value under its matching header name."""
     sheet = get_listings_sheet()
-    row = [new_listing.get(column, "") for column in COLUMNS]
+
+    # Read the header row so each value goes under the right column name
+    headers = [header.strip() for header in sheet.row_values(1)]
+
+    # Stop with a clear message if the sheet is missing a column the app needs
+    missing = [column for column in COLUMNS if column not in headers]
+    if missing:
+        raise ValueError(
+            "The sheet's header row is missing: " + ", ".join(missing)
+            + ". Check row 1 for spelling and spacing."
+        )
+
+    row = [new_listing.get(header, "") for header in headers]
     sheet.append_row(row, value_input_option="USER_ENTERED")
 
     # Clear the cached listings so the new post appears right away

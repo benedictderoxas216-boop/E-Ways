@@ -1,6 +1,7 @@
 # pages/2_🛒_Community_Board.py
 import pandas as pd
 import streamlit as st
+from device_types import DEVICE_TYPES
 from sheets_db import (
     MIN_CODE_LENGTH,
     STATUS_AVAILABLE,
@@ -11,7 +12,7 @@ from sheets_db import (
     update_status,
 )
 
-st.title("Reuse")
+st.title("🛒 Reuse")
 st.write("Buy or sell old electronics with other students.")
 
 STATUS_BADGES = {
@@ -23,6 +24,7 @@ STATUS_BADGES = {
 with st.expander("➕ Post a listing", expanded=False):
     with st.form("listing_form", clear_on_submit=True):
         listing_type = st.radio("I want to", ["Sell", "Buy"], horizontal=True)
+        device_type = st.selectbox("Device type", DEVICE_TYPES)
         device_name = st.text_input("Device name (e.g., Arduino Uno R3)")
         condition = st.selectbox("Condition", ["Working", "Needs repair", "For parts only"])
         price_php = st.number_input("Price (PHP)", min_value=0, value=0, step=50)
@@ -31,7 +33,7 @@ with st.expander("➕ Post a listing", expanded=False):
         manage_code = st.text_input(
             f"Manage code (at least {MIN_CODE_LENGTH} characters)",
             type="password",
-            help="You'll need this code to mark the item as unavailable or available again.",
+            help="You'll need this code to mark the item unavailable or available again.",
         )
 
         submitted = st.form_submit_button("Post listing")
@@ -45,6 +47,7 @@ with st.expander("➕ Post a listing", expanded=False):
             try:
                 save_listing({
                     "type": listing_type,
+                    "device_type": device_type,
                     "device": device_name.strip(),
                     "condition": condition,
                     "price_php": int(price_php),
@@ -94,9 +97,11 @@ else:
         current_status = row["status"]
         stored_hash = row["code_hash"]
         badge = STATUS_BADGES.get(current_status, current_status)
+        listing_device_type = str(row.get("device_type", "")).strip() or "Not set"
 
         with st.container(border=True):
             st.markdown(f"**{row['type']}: {row['device']}**  ·  {badge}")
+            st.caption(f"Device type: {listing_device_type}")
             st.write(f"Condition: {row['condition']} · Price: ₱{int(row['price_php']):,}")
 
             if pd.notna(row["description"]) and str(row["description"]).strip():
