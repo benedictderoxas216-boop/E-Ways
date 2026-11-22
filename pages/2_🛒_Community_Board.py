@@ -2,7 +2,7 @@
 import pandas as pd
 import streamlit as st
 from device_types import DEVICE_TYPES
-from did_you_know import show_did_you_know
+from did_you_know import show_tip_toast
 from sheets_db import (
     MIN_CODE_LENGTH,
     STATUS_AVAILABLE,
@@ -26,7 +26,7 @@ with st.expander("➕ Post a listing", expanded=False):
     # The device type sits outside the form so the tip below updates as soon as
     # it changes. Its value is still saved with the listing when the form is posted.
     device_type = st.selectbox("Device type", DEVICE_TYPES, key="reuse_device_type")
-    show_did_you_know(device_type)
+    show_tip_toast(device_type)
 
     with st.form("listing_form", clear_on_submit=True):
         listing_type = st.radio("I want to", ["Sell", "Buy"], horizontal=True)
@@ -71,6 +71,7 @@ with st.expander("➕ Post a listing", expanded=False):
                     "Your listing has been posted. Keep your manage code safe. "
                     "You need it to mark the item unavailable."
                 )
+                show_tip_toast(device_type)
             except Exception as error:
                 st.error("Could not save your listing. Please try again in a moment.")
                 st.caption(f"Technical details: {error}")

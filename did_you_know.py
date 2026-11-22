@@ -7,6 +7,7 @@
 #   The text shown in the app has no citations. The sources for each entry
 #   are kept in the comment above it so the report can reference them.
 #   Sources were matched to bullets by topic. Check them against the paper.
+import random
 
 import streamlit as st
 
@@ -79,12 +80,29 @@ DID_YOU_KNOW = {
 }
 
 
-def show_did_you_know(device_type):
-    """Show the tip card for one device type. Shows nothing if the type has no tip."""
+def tip_for(device_type):
+    """Return one random tip for the device type, or None if there is no tip."""
     tips = DID_YOU_KNOW.get(device_type)
     if not tips:
-        return
+        return None
+    return random.choice(tips)
 
-    with st.container(border=True):
-        st.markdown("**💡 Did you know**")
-        st.markdown("\n".join(f"- {tip}" for tip in tips))
+
+def show_tip_toast(device_type):
+    """Show one random tip as a toast. It fades out on its own after a few seconds."""
+    tip = tip_for(device_type)
+    if tip:
+            st.toast(f"**💡 Did you know?** {tip}")
+
+def show_tip_when_selected(device_type, page_key):
+    """
+    Show a toast only when the device type changes.
+    The first load just records the current type, so no tip appears until the user picks one.
+    """
+    state_key = f"last_tip_{page_key}"
+    if state_key not in st.session_state:
+        st.session_state[state_key] = device_type
+        return
+    if st.session_state[state_key] != device_type:
+        st.session_state[state_key] = device_type
+        show_tip_toast(device_type)

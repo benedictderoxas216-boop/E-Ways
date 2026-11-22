@@ -1,7 +1,7 @@
 # pages/1_🔧_Repair_Guides.py
 import streamlit as st
 from device_types import device_type_selector
-from did_you_know import show_did_you_know
+from did_you_know import show_tip_when_selected
 from guides_data import GENERAL_GUIDES
 
 st.title("🔧 Repair")
@@ -12,6 +12,7 @@ type_col, problem_col = st.columns(2)
 
 with type_col:
     device_type = device_type_selector("repair")
+    show_tip_when_selected(device_type, "repair")
 
 # Only show problems that apply to the chosen device type
 problems = [
@@ -24,7 +25,7 @@ with problem_col:
         problem = st.selectbox("What's the problem?", problems)
 
 # Tip for the chosen device type ("Other" has none)
-show_did_you_know(device_type)
+show_tip_when_selected(device_type, "repair")
 
 if not problems:
     st.info(f"We don't have repair guides for {device_type} devices yet. Try a different device type.")
