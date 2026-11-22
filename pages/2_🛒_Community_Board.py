@@ -2,6 +2,7 @@
 import pandas as pd
 import streamlit as st
 from device_types import DEVICE_TYPES
+from did_you_know import show_did_you_know
 from sheets_db import (
     MIN_CODE_LENGTH,
     STATUS_AVAILABLE,
@@ -22,13 +23,23 @@ STATUS_BADGES = {
 
 # ----- Posting form -----
 with st.expander("➕ Post a listing", expanded=False):
+    # The device type sits outside the form so the tip below updates as soon as
+    # it changes. Its value is still saved with the listing when the form is posted.
+    device_type = st.selectbox("Device type", DEVICE_TYPES, key="reuse_device_type")
+    show_did_you_know(device_type)
+
     with st.form("listing_form", clear_on_submit=True):
         listing_type = st.radio("I want to", ["Sell", "Buy"], horizontal=True)
-        device_type = st.selectbox("Device type", DEVICE_TYPES)
-        device_name = st.text_input("Device name (e.g., Arduino Uno R3)")
-        condition = st.selectbox("Condition", ["Working", "Needs repair", "For parts only"])
-        price_php = st.number_input("Price (PHP)", min_value=0, value=0, step=50)
-        contact = st.text_input("Contact (phone, email, or social handle)")
+
+        # Two columns on laptops, one column on phones
+        left, right = st.columns(2)
+        with left:
+            device_name = st.text_input("Device name (e.g., Arduino Uno R3)")
+            price_php = st.number_input("Price (PHP)", min_value=0, value=0, step=50)
+        with right:
+            condition = st.selectbox("Condition", ["Working", "Needs repair", "For parts only"])
+            contact = st.text_input("Contact (phone, email, or social handle)")
+
         description = st.text_area("Description (optional)", max_chars=300)
         manage_code = st.text_input(
             f"Manage code (at least {MIN_CODE_LENGTH} characters)",
@@ -77,8 +88,11 @@ except Exception as error:
 if listings.empty:
     st.info("No listings yet. Be the first to post one!")
 else:
-    filter_type = st.radio("Show", ["All", "Sell", "Buy"], horizontal=True)
-    show_closed = st.checkbox("Include unavailable listings", value=False)
+    filter_col, closed_col = st.columns(2)
+    with filter_col:
+        filter_type = st.radio("Show", ["All", "Sell", "Buy"], horizontal=True)
+    with closed_col:
+        show_closed = st.checkbox("Include unavailable listings", value=False)
 
     if filter_type != "All":
         listings = listings[listings["type"] == filter_type]
@@ -92,53 +106,58 @@ else:
     # Show newest first
     listings = listings.iloc[::-1]
 
-    for _, row in listings.iterrows():
-        sheet_row = int(row["sheet_row"])
-        current_status = row["status"]
-        stored_hash = row["code_hash"]
-        badge = STATUS_BADGES.get(current_status, current_status)
-        listing_device_type = str(row.get("device_type", "")).strip() or "Not set"
+    # Two cards per row on laptops; one per row on phones
+    for position, (_, row) in enumerate(listings.iterrows()):
+        if position % 2 == 0:
+            card_cols = st.columns(2)
 
-        with st.container(border=True):
-            st.markdown(f"**{row['type']}: {row['device']}**  ·  {badge}")
-            st.caption(f"Device type: {listing_device_type}")
-            st.write(f"Condition: {row['condition']} · Price: ₱{int(row['price_php']):,}")
+        with card_cols[position % 2]:
+            sheet_row = int(row["sheet_row"])
+            current_status = row["status"]
+            stored_hash = row["code_hash"]
+            badge = STATUS_BADGES.get(current_status, current_status)
+            listing_device_type = str(row.get("device_type", "")).strip() or "Not set"
 
-            if pd.notna(row["description"]) and str(row["description"]).strip():
-                st.write(row["description"])
+            with st.container(border=True):
+                st.markdown(f"**{row['type']}: {row['device']}**  ·  {badge}")
+                st.caption(f"Device type: {listing_device_type}")
+                st.write(f"Condition: {row['condition']} · Price: **₱{int(row['price_php']):,}**")
 
-            st.caption(f"Contact: {row['contact']}")
+                if pd.notna(row["description"]) and str(row["description"]).strip():
+                    st.write(row["description"])
 
-            with st.expander("Change status"):
-                entered_code = st.text_input(
-                    "Manage code",
-                    type="password",
-                    key=f"code_{sheet_row}",
-                )
+                st.caption(f"Contact: {row['contact']}")
 
-                if current_status == STATUS_AVAILABLE:
-                    button_label = "Mark as unavailable"
-                    target_status = STATUS_UNAVAILABLE
-                else:
-                    button_label = "Mark as available"
-                    target_status = STATUS_AVAILABLE
+                with st.expander("Change status"):
+                    entered_code = st.text_input(
+                        "Manage code",
+                        type="password",
+                        key=f"code_{sheet_row}",
+                    )
 
-                if st.button(button_label, key=f"toggle_{sheet_row}"):
-                    changed = False
-
-                    if not stored_hash:
-                        st.error("This listing has no manage code, so it can't be changed here.")
-                    elif not entered_code.strip():
-                        st.error("Enter the manage code to change this listing.")
-                    elif hash_code(entered_code) != stored_hash:
-                        st.error("Wrong manage code.")
+                    if current_status == STATUS_AVAILABLE:
+                        button_label = "Mark as unavailable"
+                        target_status = STATUS_UNAVAILABLE
                     else:
-                        try:
-                            update_status(sheet_row, target_status)
-                            changed = True
-                        except Exception as error:
-                            st.error("Could not update the status. Please try again.")
-                            st.caption(f"Technical details: {error}")
+                        button_label = "Mark as available"
+                        target_status = STATUS_AVAILABLE
 
-                    if changed:
-                        st.rerun()
+                    if st.button(button_label, key=f"toggle_{sheet_row}"):
+                        changed = False
+
+                        if not stored_hash:
+                            st.error("This listing has no manage code, so it can't be changed here.")
+                        elif not entered_code.strip():
+                            st.error("Enter the manage code to change this listing.")
+                        elif hash_code(entered_code) != stored_hash:
+                            st.error("Wrong manage code.")
+                        else:
+                            try:
+                                update_status(sheet_row, target_status)
+                                changed = True
+                            except Exception as error:
+                                st.error("Could not update the status. Please try again.")
+                                st.caption(f"Technical details: {error}")
+
+                        if changed:
+                            st.rerun()

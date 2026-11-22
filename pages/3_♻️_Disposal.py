@@ -25,7 +25,10 @@ except ImportError:
 st.title("♻️ Reduce")
 st.write("Choose your device type, then answer a few questions to get a recommendation.")
 
-device_type = device_type_selector("reduce")
+# Half width on laptops, full width on phones (same as the Repair page)
+type_col, _ = st.columns(2)
+with type_col:
+    device_type = device_type_selector("reduce")
 
 # Device-specific advice shown with every recommendation
 DEVICE_NOTES = {
@@ -81,21 +84,21 @@ def get_recommendation(device_type, powers_on, damaged, swollen, repair_cheap):
     )
 
 
-powers_on = st.radio("Does the device power on?", ["Yes", "No"], horizontal=True)
-physically_damaged = st.radio(
-    "Is the device physically damaged (cracks, water damage, swelling)?",
-    ["No", "Yes"],
-    horizontal=True,
-)
-has_battery_swelling = st.checkbox("The battery is swollen or the device is hot when charging")
-repair_cheap = st.radio(
-    "Is the repair cheaper than 50% of the price of a similar used device?",
-    ["Yes", "No", "Not sure"],
-    horizontal=True,
-)
-has_personal_data = st.checkbox("The device still contains personal data I have not wiped")
-
-st.markdown("---")
+# Questions grouped in one card
+with st.container(border=True):
+    powers_on = st.radio("Does the device power on?", ["Yes", "No"], horizontal=True)
+    physically_damaged = st.radio(
+        "Is the device physically damaged (cracks, water damage, swelling)?",
+        ["No", "Yes"],
+        horizontal=True,
+    )
+    has_battery_swelling = st.checkbox("The battery is swollen or the device is hot when charging")
+    repair_cheap = st.radio(
+        "Is the repair cheaper than 50% of the price of a similar used device?",
+        ["Yes", "No", "Not sure"],
+        horizontal=True,
+    )
+    has_personal_data = st.checkbox("The device still contains personal data I have not wiped")
 
 if st.button("Get recommendation", type="primary"):
     style, title, message, note = get_recommendation(
@@ -106,27 +109,29 @@ if st.button("Get recommendation", type="primary"):
         repair_cheap,
     )
 
-    st.subheader("Recommendation")
-    show = {
-        "error": st.error,
-        "success": st.success,
-        "info": st.info,
-        "warning": st.warning,
-    }[style]
-    show(f"**{title}**")
-    st.write(message)
+    # Result in its own card
+    with st.container(border=True):
+        st.subheader("Recommendation")
+        show = {
+            "error": st.error,
+            "success": st.success,
+            "info": st.info,
+            "warning": st.warning,
+        }[style]
+        show(f"**{title}**")
+        st.write(message)
 
-    if note:
-        st.caption(f"{device_type}: {note}")
+        if note:
+            st.caption(f"{device_type}: {note}")
 
-    if has_personal_data:
-        st.warning(
-            "🔐 **Before you sell, recycle, or donate:** wipe all personal data, "
-            "sign out of accounts, and remove any SIM card or memory card."
-        )
+        if has_personal_data:
+            st.warning(
+                "🔐 **Before you sell, recycle, or donate:** wipe all personal data, "
+                "sign out of accounts, and remove any SIM card or memory card."
+            )
 
-    if style == "error":
-        st.info("📍 Scroll down to find e-waste drop-off points in Batangas City.")
+        if style == "error":
+            st.info("📍 Scroll down to find e-waste drop-off points in Batangas City.")
 
 
 # ======================================================================
