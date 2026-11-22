@@ -13,6 +13,7 @@ type_col, problem_col = st.columns(2)
 with type_col:
     device_type = device_type_selector("repair")
     show_tip_when_selected(device_type, "repair")
+    st.caption(f"DEBUG device_type={device_type}, last={st.session_state.get('last_tip_repair')}")
 
 # Only show problems that apply to the chosen device type
 problems = [
