@@ -2,3 +2,5 @@ streamlit>=1.40
 pandas
 gspread
 google-auth
+folium
+streamlit-folium
