@@ -11,10 +11,10 @@ SESSION_KEY = "device_type"
 
 
 def device_type_selector(page_key):
-    """
-    Show the device type dropdown for one page and return the chosen type.
-    page_key must be different on each page so Streamlit can tell the widgets apart.
-    """
+    
+    #Show the device type dropdown for one page and return the chosen type.
+    #page_key must be different on each page so Streamlit can tell the widgets apart.
+    
     current = st.session_state.get(SESSION_KEY, DEVICE_TYPES[0])
     if current not in DEVICE_TYPES:
         current = DEVICE_TYPES[0]
